@@ -412,6 +412,9 @@ ramips_board_detect() {
 	*"ZBT WR8305RT")
 		name="wr8305rt"
 		;;
+	*"WE65ac")
+		name="we65ac"
+		;;
 	*"ZTE Q7")
 		name="zte-q7"
 		;;

@@ -1,0 +1,200 @@
+/*****************************************************************************/
+/*               _____                      _  ______ _____                  */
+/*              /  ___|                    | | | ___ \  __ \                 */
+/*              \ `--. _ __ ___   __ _ _ __| |_| |_/ / |  \/                 */
+/*               `--. \ '_ ` _ \ / _` | '__| __|    /| | __                  */
+/*              /\__/ / | | | | | (_| | |  | |_| |\ \| |_\ \                 */
+/*              \____/|_| |_| |_|\__,_|_|   \__\_| \_|\____/ Inc.            */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/*                      copyright 2016 by SmartRG, Inc.                      */
+/*                             Santa Barbara, CA                             */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Author: Chad Monroe,                                                      */
+/*                                                                           */
+/* Purpose: Device tree for SmartRG WE65ac WiFi extender (MT7260 + MT7612E)  */
+/*                                                                           */
+/*****************************************************************************/
+/dts-v1/;
+
+/include/ "mt7620a.dtsi"
+
+/ {
+	compatible = "ralink,mt7620a-soc";
+	model = "WE65ac";
+
+	chosen {
+		bootargs = "console=ttyS0,57600";
+	};
+
+	palmbus@10000000 {
+		gpio2: gpio@660 {
+			status = "okay";
+		};
+
+		gpio3: gpio@688 {
+			status = "okay";
+		};
+
+		spi@b00 {
+			status = "okay";
+
+			m25p80@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "mx25l6405d";
+				reg = <0 0>;
+				linux,modalias = "m25p80", "mx25l6405d";
+				spi-max-frequency = <10000000>;
+
+				partition@0 {
+					label = "u-boot";
+					reg = <0x0 0x30000>;
+					read-only;
+				};
+
+				partition@30000 {
+					label = "u-boot-env";
+					reg = <0x30000 0x10000>;
+					read-only;
+				};
+
+				factory: partition@40000 {
+					label = "factory";
+					reg = <0x40000 0x10000>;
+				};
+
+				partition@50000 {
+					label = "firmware";
+					reg = <0x50000 0x7b0000>;
+				};
+			};
+		};
+	};
+
+	pinctrl {
+		state_default: pinctrl0 {
+			gpio {
+				ralink,group = "ephy", "wled", "i2c", "uartf";
+				ralink,function = "gpio";
+			};
+		};
+	};
+
+	ethernet@10100000 {
+		status = "okay";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&rgmii1_pins &rgmii2_pins &mdio_pins>;
+
+		mtd-mac-address = <&factory 0x28>;
+		ralink,port-map = "llllw";
+
+		port@4 {
+			status = "okay";
+			phy-mode = "rgmii";
+			phy-handle = <&phy4>;
+		};
+
+		port@5 {
+			status = "okay";
+			phy-mode = "rgmii";
+			phy-handle = <&phy5>;
+		};
+
+		mdio-bus {
+			status = "okay";
+
+			phy4: ethernet-phy@4 {
+				reg = <4>;
+				phy-mode = "rgmii";
+			};
+
+			phy5: ethernet-phy@5 {
+				reg = <5>;
+				phy-mode = "rgmii";
+			};
+		};
+	};
+
+	gsw@10110000 {
+		ralink,port4 = "gmac";
+	};
+
+	sdhci@10130000 {
+		status = "okay";
+	};
+
+	ehci@101c0000 {
+		status = "okay";
+	};
+
+	ohci@101c1000 {
+		status = "okay";
+	};
+
+	wmac@10180000 {
+		ralink,mtd-eeprom = <&factory 0x0>;
+	};
+
+	pcie@10140000 {
+		status = "okay";
+		pcie-bridge {
+			mt76@0,0 {
+				reg = <0x0000 0 0 0 0>;
+				device_type = "pci";
+				mediatek,mtd-eeprom = <&factory 0x8000>;
+				mediatek,5ghz = <0>;
+			};
+		};
+	};
+
+	gpio-keys-polled {
+		compatible = "gpio-keys-polled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		poll-interval = <20>;
+		frequency {
+			label = "frequency";
+			gpios = <&gpio0 10 1>;
+			linux,code = <0x100>;
+		};
+		wps {
+			label = "wps";
+			gpios = <&gpio0 12 1>;
+			linux,code = <0x102>;
+		};
+		reset {
+			label = "reset";
+			gpios = <&gpio0 13 0>;
+			linux,code = <0x103>;
+		};
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+		wan {
+			label = "we65ac:range:04-too-close";
+			gpios = <&gpio2 0 1>;
+		};
+		lan {
+			label = "we65ac:range:01-too-far";
+			gpios = <&gpio2 1 1>;
+		};
+		usb {
+			label = "we65ac:range:05-too-close";
+			gpios = <&gpio2 2 1>;
+		};
+		power {
+			label = "we65ac:range:02-too-far";
+			gpios = <&gpio2 3 1>;
+		};
+		air {
+			label = "we65ac:range:03-ok";
+			gpios = <&gpio2 4 1>;
+		};
+	};
+};
