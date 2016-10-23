@@ -23,7 +23,7 @@
 /include/ "mt7620a.dtsi"
 
 / {
-	compatible = "ralink,mt7620a-soc";
+	compatible = "WE65ac", "ralink,mt7620a-soc";
 	model = "WE65ac";
 
 	chosen {
@@ -31,6 +31,14 @@
 	};
 
 	palmbus@10000000 {
+		gpio2: gpio@600 {
+			status = "okay";
+		};
+
+		gpio3: gpio@638 {
+			status = "okay";
+		};
+
 		gpio2: gpio@660 {
 			status = "okay";
 		};
@@ -80,6 +88,10 @@
 			gpio {
 				ralink,group = "ephy", "wled", "i2c", "uartf";
 				ralink,function = "gpio";
+			};
+			pa {
+				ralink,group = "pa";
+				ralink,function = "pa";
 			};
 		};
 	};
@@ -147,7 +159,7 @@
 				reg = <0x0000 0 0 0 0>;
 				device_type = "pci";
 				mediatek,mtd-eeprom = <&factory 0x8000>;
-				mediatek,5ghz = <0>;
+				mediatek,2ghz = <0>;
 			};
 		};
 	};
