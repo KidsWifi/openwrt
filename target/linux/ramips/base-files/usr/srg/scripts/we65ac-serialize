@@ -1,0 +1,193 @@
+#!/bin/sh
+###############################################################################
+#               _____                      _  ______ _____                    #
+#              /  ___|                    | | | ___ \  __ \                   #
+#              \ `--. _ __ ___   __ _ _ __| |_| |_/ / |  \/                   #
+#               `--. \ '_ ` _ \ / _` | '__| __|    /| | __                    #
+#              /\__/ / | | | | | (_| | |  | |_| |\ \| |_\ \                   #
+#              \____/|_| |_| |_|\__,_|_|   \__\_| \_|\____/ Inc.              #
+#                                                                             #
+###############################################################################
+#                                                                             #
+#                       copyright 2016 by SmartRG, Inc.                       #
+#                              Santa Barbara, CA                              #
+#                                                                             #
+###############################################################################
+#                                                                             #
+# Author: Chad Monroe                                                         #
+#                                                                             #
+# Purpose: Script to serialize WE65ac with proper MAC                         #
+#                                                                             #
+###############################################################################
+. /lib/ramips.sh
+. /lib/functions.sh
+. /lib/functions/system.sh
+
+usage()
+{
+	echo
+	echo "Usage: `basename $0` <BA:5E:AD:DR:E5:55> [S/N] [HW Rev]"
+	echo "  this tool will restore your factory partition to default"
+	echo "  replacing the base MAC and serial with the values specified"
+	echo
+}
+
+check_magic()
+{
+	byte0=$(dd if=${FACTORY_MTD} bs=1 count=1 skip=0 2>>/dev/null | hexdump -n 2 -e '1/1 "%02x"')
+	byte1=$(dd if=${FACTORY_MTD} bs=1 count=1 skip=1 2>>/dev/null | hexdump -n 2 -e '1/1 "%02x"')
+
+	FACTORY_CHIP_ID="${byte1}${byte0}"
+
+	if [ "${CHIP_ID}" != "${FACTORY_CHIP_ID}" ]; then
+		echo "${MY_NAME}: system CHIP_ID: ${CHIP_ID} expected but got FACTORY_CHIP_ID: ${FACTORY_CHIP_ID}; wrong board type!!" >/dev/kmsg
+
+		return 1
+	else
+		echo "${MY_NAME}: system CHIP_ID: ${CHIP_ID} matches factory partition" >/dev/kmsg
+
+		return 0
+	fi
+}
+
+write_factory()
+{
+	FN="$1" # factory bin file to write
+	DV="$2" # device to write to (mtd)
+
+	dd if=${FN} of=${DV} 2>>/dev/null
+	FN_MD5=$(md5sum ${FN} | awk '{print $1}')
+	DV_MD5=$(md5sum ${DV} | awk '{print $1}')
+
+	if [ "${FN_MD5}" != "${DV_MD5}" ]; then
+		echo "${MY_NAME}: file: ${FN} MD5: ${FN_MD5} does not match device: ${DV} MD5: ${DV_MD5}; write failed" >/dev/kmsg
+
+		return 1
+	fi
+
+	return 0
+}
+
+restore_default()
+{
+	if [ ! -f "${FACTORY_FILE}" ]; then
+		echo "${MY_NAME}: unable to find factory firmware image ${FACTORY_FILE}; can not restore" >/dev/kmsg
+
+		return 1
+	fi
+
+	write_factory "${FACTORY_FILE}" "${FACTORY_MTD}"
+	ret=$?
+
+	return $ret
+}
+
+get_macs()
+{
+	# offsets  4(0x4)  40(0x28)  46(0x2e)  16384(0x4000)  16392(0x4008)  32772(0x8004) 
+	mac1=$(mtd_get_mac_binary factory 4)
+	mac2=$(mtd_get_mac_binary factory 40)
+	mac3=$(mtd_get_mac_binary factory 46)
+	mac4=$(mtd_get_mac_binary factory 16384)
+	mac5=$(mtd_get_mac_binary factory 16392)
+	mac6=$(mtd_get_mac_binary factory 32772)
+
+	differ=0
+	for i in 1 2 3 4 5 6; do
+		mac=$(eval printf \$mac${i})
+
+		echo "${MY_NAME}: MAC ${i}: ${mac}" >/dev/kmsg
+
+		[ "$mac1" = "${mac}" ]
+		differ=$(( $? + differ ))
+	done
+
+	if [ $differ -ne 0 ]; then
+		echo "${MY_NAME}: not all MACs match; should re-serialized board!" >/dev/kmsg
+		return 1
+	fi
+}
+
+set_macs()
+{
+	NEW_MAC="$1"
+
+	dd if=${FACTORY_MTD} of=${TMP_FILE} 2>/dev/null
+
+	# offsets  4(0x4)  40(0x28)  46(0x2e)  16384(0x4000)  16392(0x4008)  32772(0x8004)
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4)) 2>>/dev/null
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x28)) 2>>/dev/null
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x2e)) 2>>/dev/null
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4000)) 2>>/dev/null
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4008)) 2>>/dev/null
+	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x8004)) 2>>/dev/null
+
+	write_factory "${TMP_FILE}" "${FACTORY_MTD}"
+	ret=$?
+
+	return $ret
+}
+
+
+#########
+# Begin
+#########
+MY_NAME="we65ac-serialize"
+MAGIC="NULL"
+BOARD=$(ramips_board_name)
+FACTORY_MTD=$(find_mtd_part factory)
+CHIP_ID=$(cat /proc/cpuinfo | grep system | awk '{print $5}' | cut -dT -f2 | cut -dA -f1)
+FACTORY_FILE="/lib/firmware/we65ac_factory_default.bin"
+TMP_FILE="/tmp/factory.bin"
+
+if [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
+	usage
+	exit 1
+fi
+
+if [ "${BOARD}" != "we65ac" ]; then
+	echo "${MY_NAME}: should only be used on the WE65ac; bailing" >/dev/kmsg
+	exit 1
+fi
+
+if [ -z "${FACTORY_MTD}" ]; then
+	echo "${MY_NAME}: unable to locate factory MTD partition" >/dev/kmsg
+	exit 1
+fi
+
+# if partition doesn't start with chipid data is not valid
+check_magic
+ret=$?
+if [ $ret -ne 0 ]; then
+	echo "${MY_NAME}: factory partition contains invalid magic, restoring" >/dev/kmsg
+
+	# burn default factory bin file with MAC 3C:90:66:AD:EA:D1
+	restore_default
+	ret=$?
+	if [ $ret -ne 0 ]; then
+		echo "${MY_NAME}: failed writing defaults to factory partition" >/dev/kmsg
+		exit 1
+	fi
+fi
+
+if [ -n "$1" ]; then
+	HW_MAC="$1"
+
+	# if a variable was passed, check if valid MAC
+	MAC_LEN=$(printf "$1" | wc -c)
+	if [ "${MAC_LEN}" -ne 17 ]; then
+		echo "${MY_NAME}: invalid MAC: ${HW_MAC}" >/dev/kmsg
+		usage
+	   	exit 1
+	fi
+
+	# got a MAC, copy factory data to /tmp, update it and burn it back
+	set_macs "$1"
+	ret=$?
+	if [ $ret -ne 0 ]; then
+		echo "${MY_NAME}: failed writing factory partition after updating MAC addresses" >/dev/kmsg
+	fi
+fi
+
+# fetch and print MACs from factory partition
+get_macs
