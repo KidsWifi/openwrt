@@ -31,11 +31,11 @@
 	};
 
 	palmbus@10000000 {
-		gpio2: gpio@600 {
+		gpio0: gpio@600 {
 			status = "okay";
 		};
 
-		gpio3: gpio@638 {
+		gpio1: gpio@638 {
 			status = "okay";
 		};
 
@@ -169,20 +169,20 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		poll-interval = <20>;
-		frequency {
-			label = "frequency";
+		pause {
+			label = "pause";
 			gpios = <&gpio0 10 1>;
 			linux,code = <0x100>;
 		};
-		wps {
-			label = "wps";
+		guest {
+			label = "guest";
 			gpios = <&gpio0 12 1>;
 			linux,code = <0x102>;
 		};
 		reset {
 			label = "reset";
-			gpios = <&gpio0 13 0>;
-			linux,code = <0x103>;
+			gpios = <&gpio0 13 1>;
+			linux,code = <0x198>;
 		};
 	};
 
