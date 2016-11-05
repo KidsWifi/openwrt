@@ -182,12 +182,31 @@ if [ -n "$1" ]; then
 	fi
 
 	# got a MAC, copy factory data to /tmp, update it and burn it back
+	echo "Setting MAC from command line to $1" > /dev/kmsg
 	set_macs "$1"
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "${MY_NAME}: failed writing factory partition after updating MAC addresses" >/dev/kmsg
 	fi
 fi
+
+
+if [ -e /etc/mfginfo.sh ]; then
+	source /etc/mfginfo.sh
+fi
+
+if [ -e /tmp/mfginfo.sh ]; then
+	source /tmp/mfginfo.sh
+fi
+
+if [ "$MFG_MAC" != "" ]; then
+	mac1=$(mtd_get_mac_binary factory 4)
+	if [ "$MFG_MAC" != "$mac1" ]; then
+		echo "Setting MAC from mfginfo to $MFG_MAC" > /dev/kmsg
+		set_macs "$MFG_MAC"
+	fi
+fi
+
 
 # fetch and print MACs from factory partition
 get_macs

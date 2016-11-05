@@ -61,13 +61,11 @@
 				partition@0 {
 					label = "u-boot";
 					reg = <0x0 0x30000>;
-					read-only;
 				};
 
 				partition@30000 {
-					label = "u-boot-env";
+					label = "mfginfo";
 					reg = <0x30000 0x10000>;
-					read-only;
 				};
 
 				factory: partition@40000 {

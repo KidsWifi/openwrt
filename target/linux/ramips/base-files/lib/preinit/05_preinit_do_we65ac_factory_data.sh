@@ -7,6 +7,7 @@ do_we65ac_factory() {
 
 	case "$board" in
 		we65ac) 
+			/usr/srg/scripts/getmfginfo boot
 			/usr/srg/scripts/we65ac-serialize
 
 		;;

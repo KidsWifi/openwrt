@@ -1,0 +1,75 @@
+#!/bin/sh /etc/rc.common
+START=03
+EXTRA_COMMANDS="rewrite erase update"
+
+TMPFILE=/tmp/mfginfo.sh
+MFGFILE=/etc/mfginfo.sh
+MFGDEV=
+MFG="Manufacturing"
+
+# Get the mtd partiton we are going to work on
+PART=$(cat /proc/mtd | grep "mfginfo" | awk -F: '{print $1}')
+MFGDEV=/dev/$PART
+
+check_partition() {
+	if [ "$PART" = "" ]; then
+		echo "mfginfo MTD partition not found in /proc/mtd" > /dev/kmsg
+		exit -1 
+	fi
+}
+
+
+get_mfg_to_file()
+{
+	# open the mtd partition
+	exec 6<>$1
+
+	while read line <&6 ; do
+		echo $line >> $2
+	done
+	exec 6<&-
+}
+
+put_mfg_to_mtd()
+{
+	mtd erase $2
+	dd if=$1 of=$2
+}
+
+rewrite()
+{
+	check_partition
+	put_mfg_to_mtd $MFGFILE $MFGDEV
+}
+
+erase()
+{
+	check_partition
+	mtd erase $MFGDEV
+}
+
+start() {
+	return 0
+}
+
+stop() {
+	return 0
+}
+
+boot() {
+	check_partition
+	get_mfg_to_file $MFGDEV $TMPFILE
+
+        # Verify the data is there.
+        if [ -e $TMPFILE ]; then source $TMPFILE; fi
+
+        if [ "$MFG_MAC" != "" ]; then
+        #       echo "mfginfo good"
+                GOODMFG=1
+		mv $TMPFILE $MFGFILE
+        else
+                echo "mfginfo data not found in $MFGDEV" > /dev/kmsg
+                GOODMFG=0
+        fi
+
+}
