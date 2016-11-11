@@ -1,0 +1,7 @@
+
+config mfg 'mfgmode'
+	option enabled '0'
+
+config mfg 'mfginfo'
+	option update '0'
+
