@@ -1,0 +1,98 @@
+#!/bin/sh /etc/rc.common
+###############################################################################
+#               _____                      _  ______ _____                    #
+#              /  ___|                    | | | ___ \  __ \                   #
+#              \ `--. _ __ ___   __ _ _ __| |_| |_/ / |  \/                   #
+#               `--. \ '_ ` _ \ / _` | '__| __|    /| | __                    #
+#              /\__/ / | | | | | (_| | |  | |_| |\ \| |_\ \                   #
+#              \____/|_| |_| |_|\__,_|_|   \__\_| \_|\____/ Inc.              #
+#                                                                             #
+###############################################################################
+#                                                                             #
+#                       copyright 2016 by SmartRG, Inc.                       #
+#                              Santa Barbara, CA                              #
+#                                                                             #
+###############################################################################
+#                                                                             #
+# Author: Chad Monroe                                                         #
+#                                                                             #
+# Purpose: Init script to enable telnet server for serialization when needed  #
+#                                                                             #
+###############################################################################
+
+START=99
+USE_PROCD=1
+
+MFG_ENABLED=`uci get mfgmode.mfgmode.enabled`
+
+mfgmode_should_enable()
+{
+	. /lib/ramips.sh
+	. /lib/functions.sh
+	. /lib/functions/system.sh
+
+	BOARD=$(ramips_board_name)
+
+	# make sure we are on supported hardware 
+	if [ "${BOARD}" != "we65ac" ]; then
+		return 0
+	fi
+
+	# if config has mfgmode enabled then force it on
+	if [ "${MFG_ENABLED}" == "1" ]; then
+		return 1
+	fi
+
+	# get base MAC from factory partition
+	FACTORY_MAC=$(mtd_get_mac_binary factory 4 | awk '{print tolower($0)}')
+
+	# if factory MAC is default then we need to be serialized
+	if [ "${FACTORY_MAC}" == "3c:90:66:ad:ea:d1" ]; then
+		return 1
+	fi
+
+	# try to pull in mfginfo
+	if [ -e /etc/mfginfo.sh ]; then
+		source /etc/mfginfo.sh
+	fi
+
+	if [ -e /tmp/mfginfo.sh ]; then
+		source /tmp/mfginfo.sh
+	fi
+
+	# if no MFG_MAC then we need to be serialized
+	if [ -z "${MFG_MAC}" ]; then
+		return 1
+	fi
+
+	# lower case to match factory partition
+	MFG_MAC=$(printf ${MFG_MAC} | awk '{print tolower($0)}')
+
+	# if mfginfo and factory MACs differ we need to be serialized
+	if [ "${MFG_MAC}" != "${FACTORY_MAC}" ]; then
+		return 1
+	fi
+
+	return 0
+}
+
+start() 
+{
+	return 0
+}
+
+stop() 
+{
+	return 0
+}
+
+boot()
+{
+	mfgmode_should_enable
+	if [ $? -eq 1 ]; then
+		echo "starting telnetd for factory serialization"
+
+		# start telnet and point it to mfginfo cli
+		telnetd -l /usr/srg/scripts/we65ac-mfginfo-cli
+	fi
+}
