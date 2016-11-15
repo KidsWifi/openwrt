@@ -266,7 +266,7 @@ write_mfg_info_to_flash()
 		return 1
 	fi
 
-	# Erase factory partition so MACs get re-written at next boot
+	# Erase factory partition so MACs get re-written at next boot if write below fails
 	get_factory_partition
 
 	printf "Erasing factory flash partition ${FACTORY_PART}.. "
@@ -276,6 +276,10 @@ write_mfg_info_to_flash()
 
 	if [ $ret -eq 0 ]; then
 		printf "Success!\n"
+
+		# save new mfginfo to /tmp or /etc then write data back to factory partition
+		/usr/srg/scripts/getmfginfo boot
+		/usr/srg/scripts/we65ac-serialize
 	elif [ $ret -ne 0 ]; then
 		printf "Failed, cause: %d\n" "$ret"
 		printf "Device serialization failed, please report to SmartRG!\n"
