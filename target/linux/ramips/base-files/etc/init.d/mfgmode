@@ -44,10 +44,10 @@ mfgmode_should_enable()
 	fi
 
 	# get base MAC from factory partition
-	FACTORY_MAC=$(mtd_get_mac_binary factory 4 | awk '{print tolower($0)}')
+	FACTORY_MAC=$(mtd_get_mac_binary factory 4 | awk '{print toupper($0)}')
 
 	# if factory MAC is default then we need to be serialized
-	if [ "${FACTORY_MAC}" == "3c:90:66:ad:ea:d1" ]; then
+	if [ "${FACTORY_MAC}" == "3C:90:66:AD:EA:D1" ]; then
 		return 1
 	fi
 
@@ -66,7 +66,7 @@ mfgmode_should_enable()
 	fi
 
 	# lower case to match factory partition
-	MFG_MAC=$(printf ${MFG_MAC} | awk '{print tolower($0)}')
+	MFG_MAC=$(printf ${MFG_MAC} | awk '{print toupper($0)}')
 
 	# if mfginfo and factory MACs differ we need to be serialized
 	if [ "${MFG_MAC}" != "${FACTORY_MAC}" ]; then
