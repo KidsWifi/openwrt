@@ -241,11 +241,13 @@ write_mfg_info_to_flash()
 	mtd -q erase ${MFG_PART} 2>>/dev/null
 	ret=$?
 
-	if [ $ret -ne 0 ]; then
-			printf "Failed, cause: %d\n" "$ret"
-			printf "Device serialization failed, please report to SmartRG!\n"
+	if [ $ret -eq 0 ]; then
+		printf "Success!\n"
+	elif [ $ret -ne 0 ]; then
+		printf "Failed, cause: %d\n" "$ret"
+		printf "Device serialization failed, please report to SmartRG!\n"
 
-			return 1
+		return 1
 	fi
 
 
@@ -257,7 +259,6 @@ write_mfg_info_to_flash()
 
 	if [ $ret -eq 0 ]; then
 		printf "Success!\n"
-		printf "Device serialization complete, rebooting.. \n"
 	else
 		printf "Failed, cause: %d\n" "$ret"
 		printf "Device serialization failed, please report to SmartRG!\n"
@@ -273,15 +274,19 @@ write_mfg_info_to_flash()
 	mtd -q erase ${FACTORY_PART} 2>>/dev/null
 	ret=$?
 
-	if [ $ret -ne 0 ]; then
-			printf "Failed, cause: %d\n" "$ret"
-			printf "Device serialization failed, please report to SmartRG!\n"
+	if [ $ret -eq 0 ]; then
+		printf "Success!\n"
+	elif [ $ret -ne 0 ]; then
+		printf "Failed, cause: %d\n" "$ret"
+		printf "Device serialization failed, please report to SmartRG!\n"
 
-			return 1
+		return 1
 	fi
 
 	# erase overlay
 	/sbin/jffs2reset -y
+
+	printf "\nDevice serialization complete, rebooting.. \n"
 	
 	# sync and pause before returning and exiting
 	sync
