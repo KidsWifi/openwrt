@@ -21,23 +21,10 @@ check_partition() {
 
 get_mfg_to_file()
 {
-	first=1
-
 	# open the mtd partition
 	exec 6<>$1
 
 	while read line <&6 ; do
-
-		# check contents of first line before writing to mfginfo.sh
-		if [ $first -eq 1 ]; then
-			if [ "$line" != "# Manufacturing Info" ]; then
-				echo "mfginfo MTD partition corrupt; no valid data found" > /dev/kmsg
-				break
-			fi
-			first=0
-		fi
-
-		# if we make it here data is relatively sane so write it out
 		echo $line >> $2
 	done
 	exec 6<&-
@@ -83,5 +70,7 @@ boot() {
 	else
 		echo "mfginfo data not found in $MFGDEV" > /dev/kmsg
 		GOODMFG=0
+
+		rm -f $TMPFILE
 	fi
 }
