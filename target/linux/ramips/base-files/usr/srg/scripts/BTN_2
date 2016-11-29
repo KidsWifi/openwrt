@@ -1,0 +1,13 @@
+#!/bin/sh
+
+PATH="/tmp/button_flag"
+/bin/mkdir -p $PATH
+
+
+if [ "$ACTION" = "pressed" ]; then
+	logger "wps button test"
+        /bin/touch $PATH/wps
+fi
+
+
+return 0

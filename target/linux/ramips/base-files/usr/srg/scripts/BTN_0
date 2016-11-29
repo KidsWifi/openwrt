@@ -1,0 +1,16 @@
+#!/bin/sh
+
+PATH="/tmp/button_flag"
+/bin/mkdir -p $PATH
+
+
+if [ "$ACTION" = "pressed" ]; then
+	logger "unlock button test"
+        /bin/touch $PATH/unlock
+elif [ "$ACTION" = "released" ]; then
+        logger "lock button test"
+        /bin/touch $PATH/lock
+fi
+
+
+return 0

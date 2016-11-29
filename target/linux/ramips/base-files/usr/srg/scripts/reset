@@ -1,0 +1,13 @@
+#!/bin/sh
+
+PATH="/tmp/button_flag"
+/bin/mkdir -p $PATH
+
+
+if [ "$ACTION" = "pressed" ]; then
+	logger "reset button test"
+        /bin/touch $PATH/reset
+fi
+
+
+return 0
