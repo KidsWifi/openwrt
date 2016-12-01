@@ -280,8 +280,7 @@ factory_restore()
 	ret=$?
 
 	if [ $ret -eq 0 ]; then
-		return 0
-
+		printf "Success!\n"
 	elif [ $ret -ne 0 ]; then
 		printf "Failed, cause: %d\n" "$ret"
 		printf "Device serialization failed, please report to SmartRG!\n"

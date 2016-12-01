@@ -76,6 +76,20 @@ mfgmode_should_enable()
 	return 0
 }
 
+set_wan_static()
+{
+	uci set network.wan.proto=static
+	uci set network.wan.ipaddr="192.168.25.100"
+	uci set network.wan.netmask="255.255.255.0"
+	uci commit
+
+	WAN_IF=`uci get network.wan.ifname`
+
+	sleep 2
+	# restart network interface 
+	/etc/init.d/network restart
+}
+
 start() 
 {
 	return 0
@@ -90,6 +104,9 @@ boot()
 {
 	mfgmode_should_enable
 	if [ $? -eq 1 ]; then
+		# set up WAN port as static IP
+		set_wan_static
+
 		echo "starting telnetd for factory serialization"
 
 		# start telnet and point it to mfginfo cli
