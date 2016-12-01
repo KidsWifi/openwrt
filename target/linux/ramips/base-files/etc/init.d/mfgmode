@@ -79,7 +79,7 @@ mfgmode_should_enable()
 set_wan_static()
 {
 	uci set network.wan.proto=static
-	uci set network.wan.ipaddr="192.168.25.100"
+	uci set network.wan.ipaddr="192.168.1.150"
 	uci set network.wan.netmask="255.255.255.0"
 	uci commit
 
