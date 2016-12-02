@@ -272,21 +272,21 @@ write_mfg_info_to_flash()
 factory_restore()
 {
 	# Erase factory partition so MACs get re-written at next boot
-	get_factory_partition
+#	get_factory_partition
 
-	printf "Erasing factory flash partition ${FACTORY_PART}.. "
+#	printf "Erasing factory flash partition ${FACTORY_PART}.. "
 
-	mtd -q erase ${FACTORY_PART} 2>>/dev/null
-	ret=$?
+#	mtd -q erase ${FACTORY_PART} 2>>/dev/null
+#	ret=$?
 
-	if [ $ret -eq 0 ]; then
-		printf "Success!\n"
-	elif [ $ret -ne 0 ]; then
-		printf "Failed, cause: %d\n" "$ret"
-		printf "Device serialization failed, please report to SmartRG!\n"
+#	if [ $ret -eq 0 ]; then
+#		printf "Success!\n"
+#	elif [ $ret -ne 0 ]; then
+#		printf "Failed, cause: %d\n" "$ret"
+#		printf "Device serialization failed, please report to SmartRG!\n"
 
-		return 1
-	fi
+#		return 1
+#	fi
 
 	# erase overlay
 	/sbin/jffs2reset -y
