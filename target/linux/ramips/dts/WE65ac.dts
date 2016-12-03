@@ -87,6 +87,10 @@
 				ralink,group = "ephy", "wled", "i2c", "uartf";
 				ralink,function = "gpio";
 			};
+			pa {
+				ralink,group = "pa";
+				ralink,function = "pa";
+			};
 		};
 	};
 
