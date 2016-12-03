@@ -75,7 +75,7 @@
 
 				partition@50000 {
 					label = "firmware";
-					reg = <0x50000 0x7b0000>;
+					reg = <0x50000 0x0>;
 				};
 			};
 		};
@@ -87,10 +87,6 @@
 				ralink,group = "ephy", "wled", "i2c", "uartf";
 				ralink,function = "gpio";
 			};
-			pa {
-				ralink,group = "pa";
-				ralink,function = "pa";
-			};
 		};
 	};
 
@@ -100,7 +96,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&rgmii1_pins &rgmii2_pins &mdio_pins>;
 
-		mtd-mac-address = <&factory 0x28>;
+		mtd-mac-address = <&factory 0x4>;
 		ralink,port-map = "llllw";
 
 		port@4 {
