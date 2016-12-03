@@ -56,8 +56,8 @@ write_factory()
 	DV="$2" # device to write to (mtd)
 
 	dd if=${FN} of=${DV} 2>>/dev/null
-	FN_MD5=$(md5sum ${FN} | awk '{print $1}')
-	DV_MD5=$(md5sum ${DV} | awk '{print $1}')
+	FN_MD5=$(md5sum ${FN} | cut -d' ' -f1)
+	DV_MD5=$(md5sum ${DV} | cut -d' ' -f1)
 
 	if [ "${FN_MD5}" != "${DV_MD5}" ]; then
 		echo "${MY_NAME}: file: ${FN} MD5: ${FN_MD5} does not match device: ${DV} MD5: ${DV_MD5}; write failed" >/dev/kmsg
@@ -84,16 +84,12 @@ restore_default()
 
 get_macs()
 {
-	# offsets  4(0x4)  40(0x28)  46(0x2e)  16384(0x4000)  16392(0x4008)  32772(0x8004) 
+	# offsets  4(0x4)  32772(0x8004)
 	mac1=$(mtd_get_mac_binary factory 4)
-	mac2=$(mtd_get_mac_binary factory 40)
-	mac3=$(mtd_get_mac_binary factory 46)
-	mac4=$(mtd_get_mac_binary factory 16384)
-	mac5=$(mtd_get_mac_binary factory 16392)
-	mac6=$(mtd_get_mac_binary factory 32772)
+	mac2=$(mtd_get_mac_binary factory 32772)
 
 	differ=0
-	for i in 1 2 3 4 5 6; do
+	for i in 1 2; do
 		mac=$(eval printf \$mac${i})
 
 		echo "${MY_NAME}: MAC ${i}: ${mac}" >/dev/kmsg
@@ -114,12 +110,8 @@ set_macs()
 
 	dd if=${FACTORY_MTD} of=${TMP_FILE} 2>/dev/null
 
-	# offsets  4(0x4)  40(0x28)  46(0x2e)  16384(0x4000)  16392(0x4008)  32772(0x8004)
+	# offsets  4(0x4)  32772(0x8004)
 	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4)) 2>>/dev/null
-	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x28)) 2>>/dev/null
-	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x2e)) 2>>/dev/null
-	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4000)) 2>>/dev/null
-	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x4008)) 2>>/dev/null
 	macaddr_2bin ${NEW_MAC} | dd conv=notrunc of=${TMP_FILE} bs=1 seek=$((0x8004)) 2>>/dev/null
 
 	write_factory "${TMP_FILE}" "${FACTORY_MTD}"
@@ -136,7 +128,7 @@ MY_NAME="we65ac-serialize"
 MAGIC="NULL"
 BOARD=$(ramips_board_name)
 FACTORY_MTD=$(find_mtd_part factory)
-CHIP_ID=$(cat /proc/cpuinfo | grep system | awk '{print $5}' | cut -dT -f2 | cut -dA -f1)
+CHIP_ID=$(cat /proc/cpuinfo | grep system | cut -d' ' -f4 | cut -dT -f2 | cut -dA -f1)
 FACTORY_FILE="/lib/firmware/we65ac_factory_default.bin"
 TMP_FILE="/tmp/factory.bin"
 
@@ -188,25 +180,23 @@ if [ -n "$1" ]; then
 	if [ $ret -ne 0 ]; then
 		echo "${MY_NAME}: failed writing factory partition after updating MAC addresses" >/dev/kmsg
 	fi
-fi
+else
+	if [ -e /etc/mfginfo.sh ]; then
+		source /etc/mfginfo.sh
+	fi
 
+	if [ -e /tmp/mfginfo.sh ]; then
+		source /tmp/mfginfo.sh
+	fi
 
-if [ -e /etc/mfginfo.sh ]; then
-	source /etc/mfginfo.sh
-fi
-
-if [ -e /tmp/mfginfo.sh ]; then
-	source /tmp/mfginfo.sh
-fi
-
-if [ "$MFG_MAC" != "" ]; then
-	mac1=$(mtd_get_mac_binary factory 4)
-	if [ "$MFG_MAC" != "$mac1" ]; then
-		echo "Setting MAC from mfginfo to $MFG_MAC" > /dev/kmsg
-		set_macs "$MFG_MAC"
+	if [ "$MFG_MAC" != "" ]; then
+		mac1=$(mtd_get_mac_binary factory 4)
+		if [ "$MFG_MAC" != "$mac1" ]; then
+			echo "Setting MAC from mfginfo to $MFG_MAC" > /dev/kmsg
+			set_macs "$MFG_MAC"
+		fi
 	fi
 fi
-
 
 # fetch and print MACs from factory partition
 get_macs
