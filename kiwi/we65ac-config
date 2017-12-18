@@ -1021,11 +1021,11 @@ CONFIG_BUSYBOX_DEFAULT_FEATURE_NTPD_SERVER=y
 CONFIG_BUSYBOX_DEFAULT_ROUTE=y
 # CONFIG_BUSYBOX_DEFAULT_SLATTACH is not set
 # CONFIG_BUSYBOX_DEFAULT_TCPSVD is not set
-CONFIG_BUSYBOX_DEFAULT_TELNET=y
-CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_TTYPE=y
+# CONFIG_BUSYBOX_DEFAULT_TELNET is not set
+# CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_TTYPE is not set
 # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_AUTOLOGIN is not set
-CONFIG_BUSYBOX_DEFAULT_TELNETD=y
-CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_STANDALONE=y
+# CONFIG_BUSYBOX_DEFAULT_TELNETD is not set
+# CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_STANDALONE is not set
 # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_INETD_WAIT is not set
 # CONFIG_BUSYBOX_DEFAULT_TFTP is not set
 # CONFIG_BUSYBOX_DEFAULT_TFTPD is not set
@@ -1961,6 +1961,7 @@ CONFIG_BUSYBOX_CONFIG_FEATURE_SH_NOFORK=y
 # CONFIG_BUSYBOX_CONFIG_SYSLOGD is not set
 # CONFIG_BUSYBOX_CONFIG_KLOGD is not set
 CONFIG_BUSYBOX_CONFIG_LOGGER=y
+# CONFIG_PACKAGE_ca-bundle is not set
 # CONFIG_PACKAGE_ca-certificates is not set
 CONFIG_PACKAGE_dnsmasq=y
 # CONFIG_PACKAGE_dnsmasq-dhcpv6 is not set
@@ -1970,6 +1971,7 @@ CONFIG_PACKAGE_dropbear=y
 #
 # Configuration
 #
+CONFIG_DROPBEAR_CURVE25519=y
 # CONFIG_DROPBEAR_ECC is not set
 # CONFIG_PACKAGE_ead is not set
 CONFIG_PACKAGE_firewall=y
@@ -2443,6 +2445,7 @@ CONFIG_PACKAGE_kmod-stp=y
 # CONFIG_PACKAGE_kmod-udptunnel6 is not set
 # CONFIG_PACKAGE_kmod-veth is not set
 # CONFIG_PACKAGE_kmod-vxlan is not set
+# CONFIG_PACKAGE_kmod-wireguard is not set
 
 #
 # Other modules
@@ -3676,6 +3679,7 @@ CONFIG_PACKAGE_ip-bridge=y
 # CONFIG_PACKAGE_mcproxy is not set
 # CONFIG_PACKAGE_mwan3 is not set
 # CONFIG_PACKAGE_olsrd is not set
+# CONFIG_PACKAGE_prince is not set
 # CONFIG_PACKAGE_quagga is not set
 # CONFIG_PACKAGE_relayd is not set
 # CONFIG_PACKAGE_smcroute is not set
@@ -3876,6 +3880,8 @@ CONFIG_PACKAGE_ip-bridge=y
 # CONFIG_PACKAGE_uanytun-sslcrypt is not set
 # CONFIG_PACKAGE_vpnc is not set
 # CONFIG_PACKAGE_vpnc-scripts is not set
+# CONFIG_PACKAGE_wireguard is not set
+# CONFIG_PACKAGE_wireguard-tools is not set
 # CONFIG_PACKAGE_xl2tpd is not set
 
 #
@@ -4029,6 +4035,7 @@ CONFIG_PACKAGE_ppp-mod-pppoe=y
 # CONFIG_PACKAGE_seafile-server is not set
 # CONFIG_PACKAGE_ser2net is not set
 # CONFIG_PACKAGE_smartsnmpd is not set
+# CONFIG_PACKAGE_snmp-mibs is not set
 # CONFIG_PACKAGE_snmp-utils is not set
 # CONFIG_PACKAGE_snmpd is not set
 # CONFIG_PACKAGE_snmpd-static is not set
